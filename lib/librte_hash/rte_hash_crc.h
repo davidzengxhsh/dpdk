@@ -450,11 +450,14 @@ crc32c_sse42_u64(uint64_t data, uint64_t init_val)
 #define CRC32_x64           (1U << 2)
 #define CRC32_SSE42_x64     (CRC32_x64|CRC32_SSE42)
 #define CRC32_ARM64         (1U << 3)
+#define CRC32_PPC64         (1U << 4)
 
 static uint8_t crc32_alg = CRC32_SW;
 
 #if defined(RTE_ARCH_ARM64)
 #include "rte_crc_arm64.h"
+#elif defined(RTE_ARCH_PPC_64)
+#include "rte_crc_ppc64.h"
 #else
 
 /**
@@ -593,6 +596,15 @@ rte_hash_crc_8byte(uint64_t data, uint32_t init_val)
 
 #endif
 
+#if defined(RTE_ARCH_PPC_64)
+static inline uint32_t
+rte_hash_crc(const void *data, uint32_t data_len, uint32_t init_val)
+{
+	uintptr_t pd = (uintptr_t) data;
+        init_val = crc32_vpmsum(init_val, (unsigned char *)pd, data_len);
+        return init_val;
+}
+#else
 /**
  * Calculate CRC32 hash on user-supplied byte array.
  *
@@ -631,6 +643,8 @@ rte_hash_crc(const void *data, uint32_t data_len, uint32_t init_val)
 
 	return init_val;
 }
+
+#endif
 
 #ifdef __cplusplus
 }

@@ -32,9 +32,9 @@
 ARCH  ?= powerpc
 CROSS ?=
 
-CPU_CFLAGS  ?= -m64
+CPU_CFLAGS  ?= -m64 
 CPU_LDFLAGS ?=
-CPU_ASFLAGS ?= -felf64
+CPU_ASFLAGS ?= -maltivec -mppc64
 
 export ARCH CROSS CPU_CFLAGS CPU_LDFLAGS CPU_ASFLAGS
 

@@ -44,12 +44,18 @@ LIBABIVER := 2
 # all source are stored in SRCS-y
 SRCS-$(CONFIG_RTE_LIBRTE_HASH) := rte_cuckoo_hash.c
 SRCS-$(CONFIG_RTE_LIBRTE_HASH) += rte_fbk_hash.c
+ifeq ($(CONFIG_RTE_ARCH_PPC_64),y)
+SRCS-$(CONFIG_RTE_LIBRTE_HASH) += crc32.S 
+endif
 
 # install this header file
 SYMLINK-$(CONFIG_RTE_LIBRTE_HASH)-include := rte_hash.h
 SYMLINK-$(CONFIG_RTE_LIBRTE_HASH)-include += rte_hash_crc.h
 ifeq ($(CONFIG_RTE_ARCH_ARM64),y)
 SYMLINK-$(CONFIG_RTE_LIBRTE_HASH)-include += rte_crc_arm64.h
+endif
+ifeq ($(CONFIG_RTE_ARCH_PPC_64),y)
+SYMLINK-$(CONFIG_RTE_LIBRTE_HASH)-include += rte_crc_ppc64.h crc32_constants.h
 endif
 SYMLINK-$(CONFIG_RTE_LIBRTE_HASH)-include += rte_jhash.h
 SYMLINK-$(CONFIG_RTE_LIBRTE_HASH)-include += rte_thash.h
