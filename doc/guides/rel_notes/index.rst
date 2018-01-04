@@ -36,6 +36,11 @@ Release Notes
     :numbered:
 
     rel_description
+    release_18_02
+    release_17_11
+    release_17_08
+    release_17_05
+    release_17_02
     release_16_11
     release_16_07
     release_16_04
@@ -43,6 +48,5 @@ Release Notes
     release_2_1
     release_2_0
     release_1_8
-    supported_os
     known_issues
     deprecation

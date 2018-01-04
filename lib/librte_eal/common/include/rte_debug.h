@@ -79,14 +79,14 @@ void rte_dump_registers(void);
 #define rte_panic(...) rte_panic_(__func__, __VA_ARGS__, "dummy")
 #define rte_panic_(func, format, ...) __rte_panic(func, format "%.0s", __VA_ARGS__)
 
-#if RTE_LOG_LEVEL >= RTE_LOG_DEBUG
+#ifdef RTE_ENABLE_ASSERT
 #define RTE_ASSERT(exp)	RTE_VERIFY(exp)
 #else
 #define RTE_ASSERT(exp) do {} while (0)
 #endif
 #define	RTE_VERIFY(exp)	do {                                                  \
 	if (unlikely(!(exp)))                                                           \
-		rte_panic("line %d\tassert \"" #exp "\" failed\n", __LINE__); \
+		rte_panic("line %d\tassert \"%s\" failed\n", __LINE__, #exp); \
 } while (0)
 
 /*

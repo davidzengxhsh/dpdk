@@ -113,7 +113,7 @@ bnx2x_vf_finalize(struct bnx2x_softc *sc,
 #define BNX2X_VF_CHANNEL_TRIES 100
 
 static int
-bnx2x_do_req4pf(struct bnx2x_softc *sc, phys_addr_t phys_addr)
+bnx2x_do_req4pf(struct bnx2x_softc *sc, rte_iova_t phys_addr)
 {
 	uint8_t *status = &sc->vf2pf_mbox->resp.common_reply.status;
 	uint8_t i;
@@ -648,6 +648,7 @@ bnx2x_vf_set_rx_mode(struct bnx2x_softc *sc)
 		query->rx_mask |= VFPF_RX_MASK_ACCEPT_MATCHED_UNICAST;
 		query->rx_mask |= VFPF_RX_MASK_ACCEPT_BROADCAST;
 		break;
+	case BNX2X_RX_MODE_ALLMULTI_PROMISC:
 	case BNX2X_RX_MODE_PROMISC:
 		query->rx_mask = VFPF_RX_MASK_ACCEPT_ALL_UNICAST;
 		query->rx_mask |= VFPF_RX_MASK_ACCEPT_ALL_MULTICAST;

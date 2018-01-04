@@ -1,7 +1,7 @@
 /*
  *   BSD LICENSE
  *
- *   Copyright (C) Cavium networks Ltd. 2016.
+ *   Copyright (C) Cavium, Inc. 2016.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -13,7 +13,7 @@
  *       notice, this list of conditions and the following disclaimer in
  *       the documentation and/or other materials provided with the
  *       distribution.
- *     * Neither the name of Cavium networks nor the names of its
+ *     * Neither the name of Cavium, Inc nor the names of its
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -43,6 +43,7 @@
 #define	PCI_SUB_DEVICE_ID_CN88XX_PASS1_NICVF		0xA11E
 #define	PCI_SUB_DEVICE_ID_CN88XX_PASS2_NICVF		0xA134
 #define	PCI_SUB_DEVICE_ID_CN81XX_NICVF			0xA234
+#define	PCI_SUB_DEVICE_ID_CN83XX_NICVF			0xA334
 
 #define NICVF_ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
@@ -54,6 +55,8 @@
 #define NICVF_CAP_TUNNEL_PARSING	(1ULL << 0)
 /* Additional word in Rx descriptor to hold optional tunneling extension info */
 #define NICVF_CAP_CQE_RX2		(1ULL << 1)
+/* The device capable of setting NIC_CQE_RX_S[APAD] == 0 */
+#define NICVF_CAP_DISABLE_APAD		(1ULL << 2)
 
 enum nicvf_tns_mode {
 	NIC_TNS_BYPASS_MODE,
@@ -85,7 +88,7 @@ enum nicvf_err_e {
 	NICVF_ERR_RSS_GET_SZ,    /* -8171 */
 };
 
-typedef nicvf_phys_addr_t (*rbdr_pool_get_handler)(void *dev, void *opaque);
+typedef nicvf_iova_addr_t (*rbdr_pool_get_handler)(void *dev, void *opaque);
 
 struct nicvf_hw_rx_qstats {
 	uint64_t q_rx_bytes;
@@ -216,6 +219,8 @@ uint32_t nicvf_qsize_cq_roundup(uint32_t val);
 uint32_t nicvf_qsize_sq_roundup(uint32_t val);
 
 void nicvf_vlan_hw_strip(struct nicvf *nic, bool enable);
+
+void nicvf_apad_config(struct nicvf *nic, bool enable);
 
 int nicvf_rss_config(struct nicvf *nic, uint32_t  qcnt, uint64_t cfg);
 int nicvf_rss_term(struct nicvf *nic);

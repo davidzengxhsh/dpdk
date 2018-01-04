@@ -38,17 +38,6 @@
 #include "virtio_logs.h"
 #include "virtio_pci.h"
 
-void
-virtqueue_disable_intr(struct virtqueue *vq)
-{
-	/*
-	 * Set VRING_AVAIL_F_NO_INTERRUPT to hint host
-	 * not to interrupt when it consumes packets
-	 * Note: this is only considered a hint to the host
-	 */
-	vq->vq_ring.avail->flags |= VRING_AVAIL_F_NO_INTERRUPT;
-}
-
 /*
  * Two types of mbuf to be cleaned:
  * 1) mbuf that has been consumed by backend but not used by virtio.
@@ -69,4 +58,29 @@ virtqueue_detatch_unused(struct virtqueue *vq)
 			}
 		}
 	return NULL;
+}
+
+/* Flush the elements in the used ring. */
+void
+virtqueue_flush(struct virtqueue *vq)
+{
+	struct vring_used_elem *uep;
+	struct vq_desc_extra *dxp;
+	uint16_t used_idx, desc_idx;
+	uint16_t nb_used, i;
+
+	nb_used = VIRTQUEUE_NUSED(vq);
+
+	for (i = 0; i < nb_used; i++) {
+		used_idx = vq->vq_used_cons_idx & (vq->vq_nentries - 1);
+		uep = &vq->vq_ring.used->ring[used_idx];
+		desc_idx = (uint16_t)uep->id;
+		dxp = &vq->vq_descx[desc_idx];
+		if (dxp->cookie != NULL) {
+			rte_pktmbuf_free(dxp->cookie);
+			dxp->cookie = NULL;
+		}
+		vq->vq_used_cons_idx++;
+		vq_ring_free_chain(vq, desc_idx);
+	}
 }

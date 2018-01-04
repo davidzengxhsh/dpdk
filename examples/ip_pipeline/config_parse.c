@@ -1,4 +1,4 @@
-﻿/*-
+/*-
  *   BSD LICENSE
  *
  *   Copyright(c) 2010-2016 Intel Corporation. All rights reserved.
@@ -103,7 +103,7 @@ static const struct app_link_params link_params_default = {
 			.hw_vlan_strip  = 0, /* VLAN strip */
 			.hw_vlan_extend = 0, /* Extended VLAN */
 			.jumbo_frame    = 0, /* Jumbo frame support */
-			.hw_strip_crc   = 0, /* CRC strip by HW */
+			.hw_strip_crc   = 1, /* CRC strip by HW */
 			.enable_scatter = 0, /* Scattered packets RX handler */
 
 			.max_rx_pkt_len = 9000, /* Jumbo frame max packet len */
@@ -806,21 +806,6 @@ parse_eal(struct app_params *app,
 				section_name,
 				entry->name);
 			p->vfio_intr = strdup(entry->value);
-			continue;
-		}
-
-		/* xen_dom0 */
-		if (strcmp(entry->name, "xen_dom0") == 0) {
-			int val;
-
-			PARSE_ERROR_DUPLICATE((p->xen_dom0_present == 0),
-				section_name,
-				entry->name);
-			p->xen_dom0_present = 1;
-
-			val = parser_read_arg_bool(entry->value);
-			PARSE_ERROR((val >= 0), section_name, entry->name);
-			p->xen_dom0 = val;
 			continue;
 		}
 
@@ -2643,10 +2628,6 @@ save_eal_params(struct app_params *app, FILE *f)
 	if (p->vfio_intr)
 		fprintf(f, "%s = %s\n", "vfio_intr", p->vfio_intr);
 
-	if (p->xen_dom0_present)
-		fprintf(f, "%s = %s\n", "xen_dom0",
-			(p->xen_dom0) ? "yes" : "no");
-
 	fputc('\n', f);
 }
 
@@ -3407,7 +3388,7 @@ app_config_args(struct app_params *app, int argc, char **argv)
 			app_print_usage(argv[0]);
 		}
 
-	optind = 0; /* reset getopt lib */
+	optind = 1; /* reset getopt lib */
 
 	/* Check dependencies between args */
 	if (preproc_params_present && (preproc_present == 0))

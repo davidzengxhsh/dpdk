@@ -1,7 +1,7 @@
 /*
  *   BSD LICENSE
  *
- *   Copyright (C) Cavium networks Ltd. 2016.
+ *   Copyright (C) Cavium, Inc. 2016.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -13,7 +13,7 @@
  *       notice, this list of conditions and the following disclaimer in
  *       the documentation and/or other materials provided with the
  *       distribution.
- *     * Neither the name of Cavium networks nor the names of its
+ *     * Neither the name of Cavium, Inc nor the names of its
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -37,7 +37,7 @@
 #include "nicvf_bsvf.h"
 #include "nicvf_plat.h"
 
-static SIMPLEQ_HEAD(, svf_entry) head = SIMPLEQ_HEAD_INITIALIZER(head);
+static STAILQ_HEAD(, svf_entry) head = STAILQ_HEAD_INITIALIZER(head);
 
 void
 nicvf_bsvf_push(struct svf_entry *entry)
@@ -45,7 +45,7 @@ nicvf_bsvf_push(struct svf_entry *entry)
 	assert(entry != NULL);
 	assert(entry->vf != NULL);
 
-	SIMPLEQ_INSERT_TAIL(&head, entry, next);
+	STAILQ_INSERT_TAIL(&head, entry, next);
 }
 
 struct svf_entry *
@@ -53,14 +53,14 @@ nicvf_bsvf_pop(void)
 {
 	struct svf_entry *entry;
 
-	assert(!SIMPLEQ_EMPTY(&head));
+	assert(!STAILQ_EMPTY(&head));
 
-	entry = SIMPLEQ_FIRST(&head);
+	entry = STAILQ_FIRST(&head);
 
 	assert(entry != NULL);
 	assert(entry->vf != NULL);
 
-	SIMPLEQ_REMOVE_HEAD(&head, next);
+	STAILQ_REMOVE_HEAD(&head, next);
 
 	return entry;
 }
@@ -68,5 +68,5 @@ nicvf_bsvf_pop(void)
 int
 nicvf_bsvf_empty(void)
 {
-	return SIMPLEQ_EMPTY(&head);
+	return STAILQ_EMPTY(&head);
 }

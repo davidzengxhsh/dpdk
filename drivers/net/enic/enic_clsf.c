@@ -57,7 +57,7 @@
 #include "vnic_intr.h"
 #include "vnic_nic.h"
 
-#ifdef RTE_MACHINE_CPUFLAG_SSE4_2
+#ifdef RTE_ARCH_X86
 #include <rte_hash_crc.h>
 #define DEFAULT_HASH_FUNC       rte_hash_crc
 #else
@@ -211,15 +211,15 @@ copy_fltr_v2(struct filter_v2 *fltr, struct rte_eth_fdir_input *input,
 		memset(&ip4_val, 0, sizeof(struct ipv4_hdr));
 
 		if (input->flow.ip4_flow.tos) {
-			ip4_mask.type_of_service = 0xff;
+			ip4_mask.type_of_service = masks->ipv4_mask.tos;
 			ip4_val.type_of_service = input->flow.ip4_flow.tos;
 		}
 		if (input->flow.ip4_flow.ttl) {
-			ip4_mask.time_to_live = 0xff;
+			ip4_mask.time_to_live = masks->ipv4_mask.ttl;
 			ip4_val.time_to_live = input->flow.ip4_flow.ttl;
 		}
 		if (input->flow.ip4_flow.proto) {
-			ip4_mask.next_proto_id = 0xff;
+			ip4_mask.next_proto_id = masks->ipv4_mask.proto;
 			ip4_val.next_proto_id = input->flow.ip4_flow.proto;
 		}
 		if (input->flow.ip4_flow.src_ip) {
@@ -299,7 +299,7 @@ copy_fltr_v2(struct filter_v2 *fltr, struct rte_eth_fdir_input *input,
 		memset(&ipv6_val, 0, sizeof(struct ipv6_hdr));
 
 		if (input->flow.ipv6_flow.proto) {
-			ipv6_mask.proto = 0xff;
+			ipv6_mask.proto = masks->ipv6_mask.proto;
 			ipv6_val.proto = input->flow.ipv6_flow.proto;
 		}
 		for (i = 0; i < 4; i++) {
@@ -315,11 +315,11 @@ copy_fltr_v2(struct filter_v2 *fltr, struct rte_eth_fdir_input *input,
 					input->flow.ipv6_flow.dst_ip[i];
 		}
 		if (input->flow.ipv6_flow.tc) {
-			ipv6_mask.vtc_flow = 0x00ff0000;
-			ipv6_val.vtc_flow = input->flow.ipv6_flow.tc << 16;
+			ipv6_mask.vtc_flow = masks->ipv6_mask.tc << 12;
+			ipv6_val.vtc_flow = input->flow.ipv6_flow.tc << 12;
 		}
 		if (input->flow.ipv6_flow.hop_limits) {
-			ipv6_mask.hop_limits = 0xff;
+			ipv6_mask.hop_limits = masks->ipv6_mask.hop_limits;
 			ipv6_val.hop_limits = input->flow.ipv6_flow.hop_limits;
 		}
 
@@ -345,7 +345,7 @@ int enic_fdir_del_fltr(struct enic *enic, struct rte_eth_fdir_filter *params)
 
 		/* Delete the filter */
 		vnic_dev_classifier(enic->vdev, CLSF_DEL,
-			&key->fltr_id, NULL);
+			&key->fltr_id, NULL, NULL);
 		rte_free(key);
 		enic->fdir.nodes[pos] = NULL;
 		enic->fdir.stats.free++;
@@ -365,8 +365,10 @@ int enic_fdir_add_fltr(struct enic *enic, struct rte_eth_fdir_filter *params)
 	u32 flowtype_supported;
 	u16 flex_bytes;
 	u16 queue;
+	struct filter_action_v2 action;
 
 	memset(&fltr, 0, sizeof(fltr));
+	memset(&action, 0, sizeof(action));
 	flowtype_supported = enic->fdir.types_mask
 			     & (1 << params->input.flow_type);
 
@@ -439,7 +441,7 @@ int enic_fdir_add_fltr(struct enic *enic, struct rte_eth_fdir_filter *params)
 			 * Delete the filter and add the modified one later
 			 */
 			vnic_dev_classifier(enic->vdev, CLSF_DEL,
-				&key->fltr_id, NULL);
+				&key->fltr_id, NULL, NULL);
 			enic->fdir.stats.free++;
 		}
 
@@ -451,8 +453,11 @@ int enic_fdir_add_fltr(struct enic *enic, struct rte_eth_fdir_filter *params)
 
 	enic->fdir.copy_fltr_fn(&fltr, &params->input,
 				&enic->rte_dev->data->dev_conf.fdir_conf.mask);
+	action.type = FILTER_ACTION_RQ_STEERING;
+	action.rq_idx = queue;
 
-	if (!vnic_dev_classifier(enic->vdev, CLSF_ADD, &queue, &fltr)) {
+	if (!vnic_dev_classifier(enic->vdev, CLSF_ADD, &queue, &fltr,
+	    &action)) {
 		key->fltr_id = queue;
 	} else {
 		dev_err(enic, "Add classifier entry failed\n");
@@ -462,7 +467,8 @@ int enic_fdir_add_fltr(struct enic *enic, struct rte_eth_fdir_filter *params)
 	}
 
 	if (do_free)
-		vnic_dev_classifier(enic->vdev, CLSF_DEL, &old_fltr_id, NULL);
+		vnic_dev_classifier(enic->vdev, CLSF_DEL, &old_fltr_id, NULL,
+				    NULL);
 	else{
 		enic->fdir.stats.free--;
 		enic->fdir.stats.add++;
@@ -488,7 +494,7 @@ void enic_clsf_destroy(struct enic *enic)
 		key = enic->fdir.nodes[index];
 		if (key) {
 			vnic_dev_classifier(enic->vdev, CLSF_DEL,
-				&key->fltr_id, NULL);
+				&key->fltr_id, NULL, NULL);
 			rte_free(key);
 			enic->fdir.nodes[index] = NULL;
 		}

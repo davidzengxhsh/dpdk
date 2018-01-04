@@ -1,7 +1,7 @@
 /*
  *   BSD LICENSE
  *
- *   Copyright (C) Cavium networks Ltd. 2016.
+ *   Copyright (C) Cavium, Inc. 2016.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -13,7 +13,7 @@
  *       notice, this list of conditions and the following disclaimer in
  *       the documentation and/or other materials provided with the
  *       distribution.
- *     * Neither the name of Cavium networks nor the names of its
+ *     * Neither the name of Cavium, Inc nor the names of its
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -41,7 +41,7 @@ struct nicvf;
  * The base queue structure to hold secondary qsets.
  */
 struct svf_entry {
-	SIMPLEQ_ENTRY(svf_entry) next; /**< Next element's pointer */
+	STAILQ_ENTRY(svf_entry) next; /**< Next element's pointer */
 	struct nicvf *vf;              /**< Holder of a secondary qset */
 };
 
