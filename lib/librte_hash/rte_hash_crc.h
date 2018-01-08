@@ -588,12 +588,24 @@ rte_hash_crc_8byte(uint64_t data, uint32_t init_val)
 #endif
 
 #if defined(RTE_ARCH_PPC_64)
+/**
+ * Calculate CRC32 hash on user-supplied byte array.
+ *
+ * @param data
+ *   Data to perform hash on.
+ * @param data_len
+ *   How many bytes to use to calculate hash value.
+ * @param init_val
+ *   Value to initialise hash generator.
+ * @return
+ *   32bit calculated hash value.
+ */
 static inline uint32_t
 rte_hash_crc(const void *data, uint32_t data_len, uint32_t init_val)
 {
 	uintptr_t pd = (uintptr_t) data;
-        init_val = crc32_vpmsum(init_val, (unsigned char *)pd, data_len);
-        return init_val;
+	init_val = crc32_vpmsum(init_val, (unsigned char *)pd, data_len);
+	return init_val;
 }
 #else
 /**
